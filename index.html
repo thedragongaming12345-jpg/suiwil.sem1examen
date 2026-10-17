@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mijn schooltabel</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1100px;
+            margin: 35px auto;
+            padding: 0 15px;
+            background: #f4f4f4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #90c990;
+            color: #172b17;
+        }
+
+        input {
+            width: 90%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .vak-input {
+            width: 100%;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 0 5px;
+            }
+
+            th, td {
+                padding: 7px;
+                font-size: 13px;
+            }
+
+            input {
+                width: 100%;
+                min-width: 65px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Vak</th>
+                <th>Totaal DW</th>
+                <th>Aantal % nodig op examen om 50%+ te hebben op SEM</th>
+            </tr>
+        </thead>
+
+        <tbody id="rows"></tbody>
+    </table>
+
+    <script>
+        const vakken = [
+            "Geschiedenis",
+            "Nederlands",
+            "Biologie",
+            "Fysica",
+            "Frans",
+            "Chemie",
+            "Engels",
+            "Wiskunde",
+            "Godsdienst",
+            "Aardrijkskunde",
+            "",
+            ""
+        ];
+
+        const rows = document.getElementById("rows");
+
+        vakken.forEach((vak) => {
+            const row = document.createElement("tr");
+
+            const vakCell = document.createElement("td");
+            const dwCell = document.createElement("td");
+            const examenCell = document.createElement("td");
+
+            if (vak) {
+                vakCell.textContent = vak;
+            } else {
+                const inputVak = document.createElement("input");
+
+                inputVak.type = "text";
+                inputVak.placeholder = "Typ een vak en druk Enter";
+                inputVak.className = "vak-input";
+
+                inputVak.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter") {
+                        const naam = inputVak.value.trim();
+
+                        if (naam !== "") {
+                            vakCell.textContent = naam;
+                        }
+                    }
+                });
+
+                vakCell.appendChild(inputVak);
+            }
+
+            const dwInput = document.createElement("input");
+
+            dwInput.type = "number";
+            dwInput.min = "0";
+            dwInput.max = "100";
+            dwInput.step = "any";
+            dwInput.placeholder = "DW %";
+
+            const examenResultaat = document.createElement("span");
+            examenResultaat.textContent = "—";
+
+            function bereken() {
+                if (dwInput.value.trim() === "") {
+                    examenResultaat.textContent = "—";
+                    return;
+                }
+
+                const x = Number(dwInput.value);
+
+                if (!Number.isFinite(x) || x < 0 || x > 100) {
+                    examenResultaat.textContent = "Ongeldige DW";
+                    return;
+                }
+
+                const nodig = (50 - 0.3 * x) / 0.7;
+
+                if (nodig <= 0) {
+                    examenResultaat.textContent = "0,0%";
+                } else if (nodig > 100) {
+                    examenResultaat.textContent = "Onmogelijk";
+                } else {
+                    examenResultaat.textContent =
+                        nodig.toFixed(1).replace(".", ",") + "%";
+                }
+            }
+
+            dwInput.addEventListener("input", bereken);
+
+            dwCell.appendChild(dwInput);
+            examenCell.appendChild(examenResultaat);
+
+            row.appendChild(vakCell);
+            row.appendChild(dwCell);
+            row.appendChild(examenCell);
+
+            rows.appendChild(row);
+        });
+    </script>
+</body>
+</html>
