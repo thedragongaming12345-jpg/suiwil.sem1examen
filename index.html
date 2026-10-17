@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mijn schooltabel</title>
+    <title>idk welk titel doe gwn</title>
 
     <style>
         body {
@@ -140,7 +140,7 @@
                 const x = Number(dwInput.value);
 
                 if (!Number.isFinite(x) || x < 0 || x > 100) {
-                    examenResultaat.textContent = "Ongeldige DW";
+                    examenResultaat.textContent = "uhh";
                     return;
                 }
 
@@ -149,7 +149,7 @@
                 if (nodig <= 0) {
                     examenResultaat.textContent = "0,0%";
                 } else if (nodig > 100) {
-                    examenResultaat.textContent = "Onmogelijk";
+                    examenResultaat.textContent = "wtf bro";
                 } else {
                     examenResultaat.textContent =
                         nodig.toFixed(1).replace(".", ",") + "%";
