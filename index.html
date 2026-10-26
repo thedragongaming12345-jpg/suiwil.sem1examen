@@ -15,6 +15,29 @@
             background: #f4f4f4;
         }
 
+        .instellingen {
+            margin-bottom: 18px;
+            padding: 15px;
+            background: white;
+            border: 1px solid #ccc;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .instellingen label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .instelling-input {
+            width: 80px;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -56,21 +79,57 @@
                 width: 100%;
                 min-width: 65px;
             }
+
+            .instelling-input {
+                width: 70px;
+                min-width: 0;
+            }
         }
     </style>
 </head>
 
 <body>
+
+    <div class="instellingen">
+        <label>
+            Aantal procent nodig bij SEM:
+            <input
+                id="doelinput"
+                class="instelling-input"
+                type="number"
+                min="0"
+                max="100"
+                step="any"
+                value="50"
+            > %
+        </label>
+
+        <label>
+            DW:
+            <input
+                id="dwprocentinput"
+                class="instelling-input"
+                type="number"
+                min="0"
+                max="100"
+                step="any"
+                value="30"
+            > %
+        </label>
+    </div>
+
     <table>
         <thead>
             <tr>
-                <th>Vak</th>
+                <th id="vakheader">Vak (30% DW en 70% EX)</th>
                 <th>Totaal DW</th>
-                <th>Aantal % nodig op examen om 50%+ te hebben op SEM</th>
+                <th id="examenheader">
+                    Aantal % nodig op examen om 50%+ te hebben op SEM
+                </th>
             </tr>
         </thead>
 
-        <tbody id="rows"></tbody>
+        <tbody id="rijen"></tbody>
     </table>
 
     <script>
@@ -89,84 +148,160 @@
             ""
         ];
 
-        const rows = document.getElementById("rows");
+        const rijen = document.getElementById("rijen");
+        const doelinput = document.getElementById("doelinput");
+        const dwprocentinput =
+            document.getElementById("dwprocentinput");
 
-        vakken.forEach((vak) => {
-            const row = document.createElement("tr");
+        const vakheader = document.getElementById("vakheader");
+        const examenheader = document.getElementById("examenheader");
 
-            const vakCell = document.createElement("td");
-            const dwCell = document.createElement("td");
-            const examenCell = document.createElement("td");
+        const vaknamen = [];
+
+        vakken.forEach((vak, nummer) => {
+            const rij = document.createElement("tr");
+
+            const vakvak = document.createElement("td");
+            const dwvak = document.createElement("td");
+            const examenvak = document.createElement("td");
+
+            let vakinput = null;
 
             if (vak) {
-                vakCell.textContent = vak;
+                vaknamen[nummer] = vak;
+                vakvak.textContent = vak;
             } else {
-                const inputVak = document.createElement("input");
+                vakinput = document.createElement("input");
+                vakinput.type = "text";
+                vakinput.placeholder = "Typ een vak";
+                vakinput.className = "vak-input";
 
-                inputVak.type = "text";
-                inputVak.placeholder = "Typ een vak en druk Enter";
-                inputVak.className = "vak-input";
+                vaknamen[nummer] = "";
 
-                inputVak.addEventListener("keydown", (event) => {
-                    if (event.key === "Enter") {
-                        const naam = inputVak.value.trim();
-
-                        if (naam !== "") {
-                            vakCell.textContent = naam;
-                        }
-                    }
+                vakinput.addEventListener("input", () => {
+                    vaknamen[nummer] = vakinput.value.trim();
                 });
 
-                vakCell.appendChild(inputVak);
+                vakvak.appendChild(vakinput);
             }
 
-            const dwInput = document.createElement("input");
+            const dwinput = document.createElement("input");
 
-            dwInput.type = "number";
-            dwInput.min = "0";
-            dwInput.max = "100";
-            dwInput.step = "any";
-            dwInput.placeholder = "DW %";
+            dwinput.type = "number";
+            dwinput.min = "0";
+            dwinput.max = "100";
+            dwinput.step = "any";
+            dwinput.placeholder = "DW %";
 
-            const examenResultaat = document.createElement("span");
-            examenResultaat.textContent = "—";
+            const examenresultaat = document.createElement("span");
+            examenresultaat.textContent = "—";
 
             function bereken() {
-                if (dwInput.value.trim() === "") {
-                    examenResultaat.textContent = "—";
+                if (dwinput.value.trim() === "") {
+                    examenresultaat.textContent = "—";
                     return;
                 }
 
-                const x = Number(dwInput.value);
+                const dwpunt = Number(dwinput.value);
+                const doel = Number(doelinput.value);
+                const dwprocent = Number(dwprocentinput.value);
 
-                if (!Number.isFinite(x) || x < 0 || x > 100) {
-                    examenResultaat.textContent = "uhh";
+                if (
+                    !Number.isFinite(dwpunt) ||
+                    dwpunt < 0 ||
+                    dwpunt > 100 ||
+                    doelinput.value.trim() === "" ||
+                    !Number.isFinite(doel) ||
+                    doel < 0 ||
+                    doel > 100 ||
+                    dwprocentinput.value.trim() === "" ||
+                    !Number.isFinite(dwprocent) ||
+                    dwprocent < 0 ||
+                    dwprocent > 100
+                ) {
+                    examenresultaat.textContent = "uhh";
                     return;
                 }
 
-                const nodig = (50 - 0.3 * x) / 0.7;
+                const dwdeel = dwprocent / 100;
+                const examendeel = 1 - dwdeel;
+
+                let nodig;
+
+                if (examendeel === 0) {
+                    nodig = doel - dwpunt;
+                } else {
+                    nodig = (doel - dwdeel * dwpunt) / examendeel;
+                }
 
                 if (nodig <= 0) {
-                    examenResultaat.textContent = "0,0%";
+                    examenresultaat.textContent = "0,0%";
                 } else if (nodig > 100) {
-                    examenResultaat.textContent = "wtf bro";
+                    examenresultaat.textContent = "Meer dan 100%";
                 } else {
-                    examenResultaat.textContent =
+                    examenresultaat.textContent =
                         nodig.toFixed(1).replace(".", ",") + "%";
                 }
             }
 
-            dwInput.addEventListener("input", bereken);
+            dwinput.addEventListener("input", bereken);
 
-            dwCell.appendChild(dwInput);
-            examenCell.appendChild(examenResultaat);
+            dwvak.appendChild(dwinput);
+            examenvak.appendChild(examenresultaat);
 
-            row.appendChild(vakCell);
-            row.appendChild(dwCell);
-            row.appendChild(examenCell);
+            rij.appendChild(vakvak);
+            rij.appendChild(dwvak);
+            rij.appendChild(examenvak);
 
-            rows.appendChild(row);
+            rijen.appendChild(rij);
         });
+
+        function updateinstellingen() {
+            const doel = doelinput.value;
+            const dwprocent = dwprocentinput.value;
+
+            const doelgoed =
+                doel.trim() !== "" &&
+                Number.isFinite(Number(doel)) &&
+                Number(doel) >= 0 &&
+                Number(doel) <= 100;
+
+            const dwgoed =
+                dwprocent.trim() !== "" &&
+                Number.isFinite(Number(dwprocent)) &&
+                Number(dwprocent) >= 0 &&
+                Number(dwprocent) <= 100;
+
+            if (dwgoed) {
+                const dw = Number(dwprocent);
+                const examen = 100 - dw;
+
+                vakheader.textContent =
+                    `Vak (${dw}% DW en ${examen}% EX)`;
+            } else {
+                vakheader.textContent = "Vak (bro typ gwn in bij DW)";
+            }
+
+            if (doelgoed) {
+                examenheader.textContent =
+                    `Aantal % nodig op examen om ${doel}%+ te hebben op SEM`;
+            } else {
+                examenheader.textContent =
+                    "Aantal % nodig op examen om ... te hebben op SEM";
+            }
+
+            document.querySelectorAll("#rijen tr").forEach((rij) => {
+                const dwinput = rij.querySelector('input[type="number"]');
+
+                if (dwinput) {
+                    dwinput.dispatchEvent(new Event("input"));
+                }
+            });
+        }
+
+        doelinput.addEventListener("input", updateinstellingen);
+        dwprocentinput.addEventListener("input", updateinstellingen);
     </script>
+
 </body>
 </html>
